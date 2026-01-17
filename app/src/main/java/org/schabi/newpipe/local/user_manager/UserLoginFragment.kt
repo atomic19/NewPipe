@@ -12,7 +12,10 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import org.schabi.newpipe.R
 import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.player.helper.PlayerHolder
+import org.schabi.newpipe.player.playqueue.SinglePlayQueue
 import org.schabi.newpipe.util.NavigationHelper
+import org.schabi.newpipe.util.SparseItemUtil
 
 class UserLoginFragment : Fragment() {
     private var webView: WebView? = null
@@ -84,15 +87,7 @@ class UserLoginFragment : Fragment() {
         schedulePauseAndMute()
         val cleanedUrl = stripListParam(url)
         Log.d(TAG, "Opening URL: $cleanedUrl")
-        NavigationHelper.openVideoDetailFragment(
-            requireContext(),
-            requireActivity().supportFragmentManager,
-            ServiceList.YouTube.serviceId,
-            cleanedUrl,
-            "Video",
-            null,
-            false
-        )
+        openOrEnqueueVideo(cleanedUrl)
     }
 
     private fun stripListParam(url: String): String {
@@ -124,6 +119,31 @@ class UserLoginFragment : Fragment() {
             }
         }
         view.post(runnable)
+    }
+
+    private fun openOrEnqueueVideo(url: String) {
+        val context = requireContext()
+        if (PlayerHolder.getInstance().isPlayerOpen()) {
+            SparseItemUtil.fetchStreamInfoAndSaveToDatabase(
+                context,
+                ServiceList.YouTube.serviceId,
+                url
+            ) { streamInfo ->
+                if (!isAdded) return@fetchStreamInfoAndSaveToDatabase
+                NavigationHelper.enqueueOnPlayer(context, SinglePlayQueue(streamInfo))
+            }
+            return
+        }
+
+        NavigationHelper.openVideoDetailFragment(
+            context,
+            requireActivity().supportFragmentManager,
+            ServiceList.YouTube.serviceId,
+            url,
+            "Video",
+            null,
+            false
+        )
     }
 
     companion object {
