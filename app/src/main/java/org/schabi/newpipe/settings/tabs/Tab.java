@@ -28,6 +28,7 @@ import org.schabi.newpipe.local.feed.FeedFragment;
 import org.schabi.newpipe.local.history.StatisticsPlaylistFragment;
 import org.schabi.newpipe.local.playlist.LocalPlaylistFragment;
 import org.schabi.newpipe.local.subscription.SubscriptionFragment;
+import org.schabi.newpipe.local.user_manager.UserLoginFragment;
 import org.schabi.newpipe.util.KioskTranslator;
 import org.schabi.newpipe.util.ServiceHelper;
 
@@ -157,6 +158,7 @@ public abstract class Tab {
 
     public enum Type {
         BLANK(new BlankTab()),
+        USER_LOGIN(new UserLoginTab()),
         DEFAULT_KIOSK(new DefaultKioskTab()),
         SUBSCRIPTIONS(new SubscriptionsTab()),
         FEED(new FeedTab()),
@@ -206,6 +208,31 @@ public abstract class Tab {
         @Override
         public BlankFragment getFragment(final Context context) {
             return new BlankFragment();
+        }
+    }
+
+    public static class UserLoginTab extends Tab {
+        public static final int ID = 10;
+
+        @Override
+        public int getTabId() {
+            return ID;
+        }
+
+        @Override
+        public String getTabName(final Context context) {
+            return "Login";
+        }
+
+        @DrawableRes
+        @Override
+        public int getTabIconRes(final Context context) {
+            return R.drawable.ic_person;
+        }
+
+        @Override
+        public UserLoginFragment getFragment(final Context context) {
+            return new UserLoginFragment();
         }
     }
 

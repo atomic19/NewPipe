@@ -116,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
 
     private BroadcastReceiver broadcastReceiver;
 
+    private static final int ITEM_ID_USER_LOGIN = -11;
+
     private static final int ITEM_ID_SUBSCRIPTIONS = -1;
     private static final int ITEM_ID_FEED = -2;
     private static final int ITEM_ID_BOOKMARKS = -3;
@@ -263,6 +265,9 @@ public class MainActivity extends AppCompatActivity {
      * @throws ExtractionException if the service didn't provide available kiosks
      */
     private void addDrawerMenuForCurrentService() throws ExtractionException {
+        drawerLayoutBinding.navigation.getMenu()
+                .add(R.id.menu_tabs_group, ITEM_ID_USER_LOGIN, ORDER, "Login");
+
         //Tabs
         drawerLayoutBinding.navigation.getMenu()
                 .add(R.id.menu_tabs_group, ITEM_ID_SUBSCRIPTIONS, ORDER,
@@ -346,6 +351,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void tabSelected(final MenuItem item) {
         switch (item.getItemId()) {
+            case ITEM_ID_USER_LOGIN:
+                NavigationHelper.openUserLoginFragment(getSupportFragmentManager());
+                break;
             case ITEM_ID_SUBSCRIPTIONS:
                 NavigationHelper.openSubscriptionFragment(getSupportFragmentManager());
                 break;
