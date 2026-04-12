@@ -45,16 +45,19 @@ class UserLoginFragment : Fragment() {
 
                 override fun onPageStarted(view: WebView, url: String, favicon: android.graphics.Bitmap?) {
                     Log.d(TAG, "Started URL: $url")
+                    lastVisitedUrl = url
                     super.onPageStarted(view, url, favicon)
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
                     Log.d(TAG, "Finished URL: $url")
+                    lastVisitedUrl = url
                     super.onPageFinished(view, url)
                 }
 
                 override fun doUpdateVisitedHistory(view: WebView, url: String, isReload: Boolean) {
                     Log.d(TAG, "Visited URL: $url (reload=$isReload)")
+                    lastVisitedUrl = url
                     maybeOpenVideo(url)
                     super.doUpdateVisitedHistory(view, url, isReload)
                 }
@@ -64,7 +67,8 @@ class UserLoginFragment : Fragment() {
                     super.onLoadResource(view, url)
                 }
             }
-            loadUrl("https://www.youtube.com/")
+            schedulePauseAndMute()
+            loadUrl(lastVisitedUrl)
         }
     }
 
@@ -148,5 +152,6 @@ class UserLoginFragment : Fragment() {
 
     companion object {
         private const val TAG = "UserLoginFragment"
+        private var lastVisitedUrl = "https://www.youtube.com/"
     }
 }

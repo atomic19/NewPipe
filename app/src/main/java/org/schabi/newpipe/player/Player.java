@@ -125,6 +125,7 @@ import org.schabi.newpipe.util.ListHelper;
 import org.schabi.newpipe.util.NavigationHelper;
 import org.schabi.newpipe.util.SerializedCache;
 import org.schabi.newpipe.util.StreamTypeUtil;
+import org.schabi.newpipe.util.YouTubeWatchtimeReporter;
 import org.schabi.newpipe.util.image.CoilHelper;
 
 import java.util.List;
@@ -687,6 +688,7 @@ public final class Player implements PlaybackListener, Listener {
             Log.d(TAG, "destroy() called");
         }
 
+        YouTubeWatchtimeReporter.onPlaybackStopped();
         saveStreamProgressState();
         setRecovery();
         stopActivityBinding();
@@ -996,6 +998,7 @@ public final class Player implements PlaybackListener, Listener {
                                   final int duration,
                                   final int bufferPercent) {
         if (isPrepared) {
+            YouTubeWatchtimeReporter.onProgress(context, currentMetadata, currentProgress);
             UIs.call(ui -> ui.onUpdateProgress(currentProgress, duration, bufferPercent));
             notifyProgressUpdateToListeners(currentProgress, duration, bufferPercent);
         }
@@ -1198,6 +1201,8 @@ public final class Player implements PlaybackListener, Listener {
             startProgressLoop();
         }
 
+        YouTubeWatchtimeReporter.onPlaybackStarted(
+                context, currentMetadata, getPlaybackPositionMs());
         UIs.call(PlayerUi::onPlaying);
     }
 
@@ -1218,6 +1223,7 @@ public final class Player implements PlaybackListener, Listener {
             stopProgressLoop();
         }
 
+        YouTubeWatchtimeReporter.onPlaybackPaused(currentMetadata, getPlaybackPositionMs());
         UIs.call(PlayerUi::onPaused);
     }
 
@@ -1236,6 +1242,7 @@ public final class Player implements PlaybackListener, Listener {
             return;
         }
 
+        YouTubeWatchtimeReporter.onPlaybackStopped();
         UIs.call(PlayerUi::onCompleted);
 
         if (playQueue.getIndex() < playQueue.size() - 1) {
@@ -1372,6 +1379,8 @@ public final class Player implements PlaybackListener, Listener {
                     Optional.ofNullable(currentMetadata)
                             .flatMap(MediaItemTag::getMaybeAudioTrack).orElse(null);
             currentMetadata = tag;
+            YouTubeWatchtimeReporter.onStreamChanged(context, currentMetadata,
+                    getPlaybackPositionMs());
 
             if (!currentMetadata.getErrors().isEmpty()) {
                 // new errors might have been added even if previousInfo == tag.getMaybeStreamInfo()
@@ -1446,12 +1455,14 @@ public final class Player implements PlaybackListener, Listener {
                 // we need to register a view count here since no metadata has changed
                 if (getRepeatMode() == REPEAT_MODE_ONE && newIndex == playQueue.getIndex()) {
                     registerStreamViewed();
+                    YouTubeWatchtimeReporter.onSeek(currentMetadata, newPosition.positionMs);
                     break;
                 }
             case DISCONTINUITY_REASON_SEEK:
                 if (DEBUG) {
                     Log.d(TAG, "ExoPlayer - onSeekProcessed() called");
                 }
+                YouTubeWatchtimeReporter.onSeek(currentMetadata, newPosition.positionMs);
                 if (isPrepared) {
                     saveStreamProgressState();
                 }
@@ -2328,6 +2339,10 @@ public final class Player implements PlaybackListener, Listener {
 
     public boolean isPlaying() {
         return !exoPlayerIsNull() && simpleExoPlayer.isPlaying();
+    }
+
+    private long getPlaybackPositionMs() {
+        return exoPlayerIsNull() ? 0L : Math.max(simpleExoPlayer.getCurrentPosition(), 0L);
     }
 
     public boolean getPlayWhenReady() {
